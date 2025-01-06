@@ -62,11 +62,11 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
         
         if jimmy(sideval, sidel) or choks(sideh,sideval)  or jimmy(tabval,tabl) or choks(tabh,tabval) :
             
-            api_id = '25126202'
-            api_hash = '51bb6b6de4f0faec05fba079ee976bba'
-            token = '7646704331:AAEFjZnnkfsY745tzS94yFgkpL0Z5X78IcQ'
+            api_id = 'use ur api id from telegram org apps'
+            api_hash = 'use ur api hash from telegram org apps'
+            token = 'use ur token from telegram bot'
             message = f'THE PRICE OF GOLD 1KG IS {tabval} AND THE PRICE OF GOLD SPOT IS {sideval}'
-            phone = '+919481092916'
+            phone = 'ur number wiht +(country code)'
             
             # Use synchronous client for Telegram
             client = TelegramClient('session', api_id, api_hash)
@@ -82,11 +82,11 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
             await client.disconnect()
     else:
         if jimmy(sideval,sidel) or choks(sideh,sideval) or jimmy(tabval,tabl) or choks(tabh,tabval) :
-            api_id = '25126202'
-            api_hash = '51bb6b6de4f0faec05fba079ee976bba'
-            token = '7646704331:AAEFjZnnkfsY745tzS94yFgkpL0Z5X78IcQ'
+            api_id = 'use ur api id from telegram org apps'
+            api_hash = 'use ur api hash from telegram org apps'
+            token = 'use ur token from telegram bot'
             message = f'THE PRICE OF GOLD 1KG IS {tabval} AND THE PRICE OF GOLD SPOT IS {sideval}'
-            phone = '+919481092916'
+            phone = 'ur number wiht +(country code)'
             
             # Use synchronous client for Telegram
             client = TelegramClient('session', api_id, api_hash)
