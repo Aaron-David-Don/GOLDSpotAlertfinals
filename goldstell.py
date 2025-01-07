@@ -1,3 +1,7 @@
+#takes the user input as different range for different products along with the mobile number and then with the help
+#of playwright it will constantly check the website if the gold rate reaches the user value then it sends notification 
+#to the user through Telegram.
+
 import gradio as gr
 import asyncio
 from playwright.async_api import async_playwright
@@ -5,7 +9,6 @@ from telethon.sync import TelegramClient
 from telethon.tl.types import InputPeerUser
 import threading
 
-# Global variable to control stopping
 stop_flag = False
 
 async def checking(url):
@@ -53,8 +56,8 @@ async def send_notification(api_id, api_hash, number, message):
 
 async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
     global stop_flag
-    api_id = '25126202'
-    api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    api_id = 'use ur api id from telegram org apps'
+    api_hash = 'use ur api hash from telegram org apps'
 
     sideval_low_notified = False
     sideval_high_notified = False
@@ -84,15 +87,15 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
             await send_notification(api_id, api_hash, number, message)
             tabval_high_notified = True
 
-        # Stop the loop only if all conditions for notifications have been met
+       
         if (sidel is None or sideval_low_notified) and \
            (sideh is None or sideval_high_notified) and \
            (tabl is None or tabval_low_notified) and \
            (tabh is None or tabval_high_notified):
-            stop_flag = True  # Stop the loop when all relevant notifications have been sent
+            stop_flag = True 
             break
 
-        await asyncio.sleep(10)  # Wait before checking again to prevent spamming
+        await asyncio.sleep(10) 
 
     message = "Scraping stopped. All conditions have been met."
     await send_notification(api_id, api_hash, number, message)
@@ -102,7 +105,6 @@ def start_scraping(side_low, side_high, table_low, table_high, phone_number):
     stop_flag = False
     url = "http://www.ambicaaspot.com/liverate.html"
     
-    # Multiply table low and high by 10 inside the function
     table_low = table_low * 10 if table_low else None
     table_high = table_high * 10 if table_high else None
 
