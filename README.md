@@ -4,7 +4,7 @@
    -Open the telegram app and search for @BotFather.<br />
    -Click on the start button or send “/start”.<br />
    -Then send “/newbot” message to set up a name and a username.<br />
-   -After setting name and username BotFather will give you an API token which is your bot token.\<br />
+   -After setting name and username BotFather will give you an API token which is your bot token.<br />
    -Then create an app on the telegram. <br />
    -Log into the telegram core: https://my.telegram.org<br />
    -Go to ‘API development tools’ and fill out the form.<br />
