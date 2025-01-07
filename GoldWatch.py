@@ -1,13 +1,15 @@
+#takes the user input as different range for different products along with the mobile number and then with the help
+#of playwright it will constantly check the website if the gold rate reaches the user value then it sends notification 
+#to the user through Telegram.
+
 import gradio as gr
 import asyncio
 from playwright.async_api import async_playwright
-from twilio.rest import Client
-import os
-import json
-import telebot
 from telethon.sync import TelegramClient
 from telethon.tl.types import InputPeerUser
+import threading
 
+stop_flag = False
 
 async def checking(url):
     async with async_playwright() as p:
@@ -38,90 +40,107 @@ async def checking(url):
         tabval = float(await tit.inner_text()) if tit else "N/A"
         print("The table value is: ", tabval)
 
+        await browser.close()
         return sideval, tabval
 
-    await browser.close()
-    
-def choks(given,taken):
-    if given == 0:
-        return False
-    else:
-        return (given<=taken)
-
-def jimmy(taken,given):
-    if given == 0:
-        return False
-    else:
-        return (taken<=given)
+async def send_notification(api_id, api_hash, number, message):
+    client = TelegramClient('session', api_id, api_hash)
+    await client.start()
+    try:
+        user = await client.get_entity(number)
+        receiver = InputPeerUser(user.id, user.access_hash)
+        await client.send_message(receiver, message, parse_mode='html')
+    except Exception as e:
+        print(f"Error: {e}")
+    await client.disconnect()
 
 async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
-    sideval, tabval = await checking(url)
-    while choks(sidel,sideval) or jimmy(sideval,sideh) or choks(tabl,tabval) or jimmy(tabval,tabh):
-        
+    global stop_flag
+    api_id = 'use ur api id from telegram org apps'
+    api_hash = 'use ur api hash from telegram org apps'
+
+    sideval_low_notified = False
+    sideval_high_notified = False
+    tabval_low_notified = False
+    tabval_high_notified = False
+
+    while not stop_flag:
         sideval, tabval = await checking(url)
-        
-        if jimmy(sideval, sidel) or choks(sideh,sideval)  or jimmy(tabval,tabl) or choks(tabh,tabval) :
-            
-            api_id = 'use ur api id from telegram org apps'
-            api_hash = 'use ur api hash from telegram org apps'
-            token = 'use ur token from telegram bot'
-            message = f'THE PRICE OF GOLD 1KG IS {tabval} AND THE PRICE OF GOLD SPOT IS {sideval}'
-            phone = 'ur number wiht +(country code)'
-            
-            # Use synchronous client for Telegram
-            client = TelegramClient('session', api_id, api_hash)
-            await client.start()  # Handles login and connection
-            try:
-                user = await client.get_entity(number)  # Asynchronously get entity
-                user_id = user.id
-                access_hash = user.access_hash
-                receiver = InputPeerUser(user_id, access_hash)
-                await client.send_message(receiver, message, parse_mode='html')
-            except Exception as e:
-                print(f"Error: {e}")
-            await client.disconnect()
-    else:
-        if jimmy(sideval,sidel) or choks(sideh,sideval) or jimmy(tabval,tabl) or choks(tabh,tabval) :
-            api_id = 'use ur api id from telegram org apps'
-            api_hash = 'use ur api hash from telegram org apps'
-            token = 'use ur token from telegram bot'
-            message = f'THE PRICE OF GOLD 1KG IS {tabval} AND THE PRICE OF GOLD SPOT IS {sideval}'
-            phone = 'ur number wiht +(country code)'
-            
-            # Use synchronous client for Telegram
-            client = TelegramClient('session', api_id, api_hash)
-            await client.start()  # Handles login and connection
-            try:
-                user = await client.get_entity(number)  # Asynchronously get entity
-                user_id = user.id
-                access_hash = user.access_hash
-                receiver = InputPeerUser(user_id, access_hash)
-                await client.send_message(receiver, message, parse_mode='html')
-            except Exception as e:
-                print(f"Error: {e}")
-            await client.disconnect()
 
+        if not sideval_low_notified and sidel is not None and sideval < sidel:
+            message = f'Gold Spot  $ : {sideval} 📉'
+            await send_notification(api_id, api_hash, number, message)
+            sideval_low_notified = True
 
-# Wrapper function for Gradio interface
+        if not sideval_high_notified and sideh is not None and sideval > sideh:
+            message = f'Gold Spot  $ : {sideval} 📈'
+            await send_notification(api_id, api_hash, number, message)
+            sideval_high_notified = True
+
+        if not tabval_low_notified and tabl is not None and tabval < tabl:
+            message = f'Gold (999) Rs: {tabval/10} 📉'
+            await send_notification(api_id, api_hash, number, message)
+            tabval_low_notified = True
+
+        if not tabval_high_notified and tabh is not None and tabval > tabh:
+            message = f'Gold (999) Rs: {tabval/10} 📈'
+            await send_notification(api_id, api_hash, number, message)
+            tabval_high_notified = True
+
+       
+        if (sidel is None or sideval_low_notified) and \
+           (sideh is None or sideval_high_notified) and \
+           (tabl is None or tabval_low_notified) and \
+           (tabh is None or tabval_high_notified):
+            stop_flag = True 
+            break
+
+        await asyncio.sleep(10) 
+
+    message = "Scraping stopped. All conditions have been met."
+    await send_notification(api_id, api_hash, number, message)
+
 def start_scraping(side_low, side_high, table_low, table_high, phone_number):
+    global stop_flag
+    stop_flag = False
     url = "http://www.ambicaaspot.com/liverate.html"
-    asyncio.run(scrape_amazon(url, float(side_low), float(side_high), float(table_low), float(table_high), phone_number))
-    return f"The current gold values are :\nSide Low: {side_low}, Side High: {side_high}, Table Low: {table_low}, Table High: {table_high} \nand a notification has been sent to your mobile number"
+    
+    table_low = table_low * 10 if table_low else None
+    table_high = table_high * 10 if table_high else None
 
-# Gradio Interface
-interface = gr.Interface(
-    fn=start_scraping,
-    inputs=[
-        gr.Number(label="Side Low"),
-        gr.Number(label="Side High"),
-        gr.Number(label="Table Low"),
-        gr.Number(label="Table High"),
-        gr.Textbox(label="Phone Number (with '+')"),
-    ],
-    outputs="text",
-    title="GOLD RATE",
-    description="Kindly enter your required target values and phone number(for notification) and leave the blocks blank if not required: ",
-)
+    thread = threading.Thread(target=lambda: asyncio.run(scrape_amazon(
+        url, 
+        float(side_low) if side_low else None, 
+        float(side_high) if side_high else None, 
+        table_low, 
+        table_high, 
+        phone_number
+    )))
+    thread.start()
+    return "Scraping started. You'll be notified when conditions are met."
 
-# Launch the interface
+def stop_scraping():
+    global stop_flag
+    stop_flag = True
+    return "Scraping stopped."
+
+with gr.Blocks() as interface:
+    with gr.Row():
+        gr.Markdown("# GOLD RATE Scraper with Stop Functionality")
+    
+    with gr.Row():
+        with gr.Column():
+            side_low = gr.Number(label="Gold Spot  $ Low")
+            side_high = gr.Number(label="Gold Spot  $ High")
+            table_low = gr.Number(label="Gold (999) Rs Low")
+            table_high = gr.Number(label="Gold (999) Rs High")
+            phone_number = gr.Textbox(label="Phone Number (with '+')")
+            start_button = gr.Button("Start Scraping")
+            stop_button = gr.Button("Stop Scraping")
+        
+    output = gr.Textbox(label="Status", lines=4)
+
+    start_button.click(start_scraping, inputs=[side_low, side_high, table_low, table_high, phone_number], outputs=output)
+    stop_button.click(stop_scraping, inputs=[], outputs=output)
+
 interface.launch(server_name="0.0.0.0", server_port=7860)
