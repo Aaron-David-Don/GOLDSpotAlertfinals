@@ -52,59 +52,64 @@ async def send_notification(api_id, api_hash, number, message):
         print(f"Error: {e}")
     await client.disconnect()
 
-async def check_conditions(sideval, tabval, sidel, sideh, tabl, tabh, number, api_id, api_hash):
-    tasks = []
-    
-    if sidel is not None:
-        tasks.append(check_side_low(sideval, sidel, number, api_id, api_hash))
-    if sideh is not None:
-        tasks.append(check_side_high(sideval, sideh, number, api_id, api_hash))
-    if tabl is not None:
-        tasks.append(check_tab_low(tabval, tabl, number, api_id, api_hash))
-    if tabh is not None:
-        tasks.append(check_tab_high(tabval, tabh, number, api_id, api_hash))
-    
-    await asyncio.gather(*tasks)
-
-async def check_side_low(sideval, sidel, number, api_id, api_hash):
-    if math.trunc(sideval) <= sidel:
-        message = f'Gold Spot  $ : {sideval} 📉.'
-        await send_notification(api_id, api_hash, number, message)
-
-async def check_side_high(sideval, sideh, number, api_id, api_hash):
-    if math.trunc(sideval) >= sideh:
-        message = f'Gold Spot  $ : {sideval} 📈'
-        await send_notification(api_id, api_hash, number, message)
-
-async def check_tab_low(tabval, tabl, number, api_id, api_hash):
-    if math.trunc(tabval) <= tabl:
-        message = f'Gold (999) Rs: {tabval/10} 📉'
-        await send_notification(api_id, api_hash, number, message)
-
-async def check_tab_high(tabval, tabh, number, api_id, api_hash):
-    if math.trunc(tabval) >= tabh:
-        message = f'Gold (999) Rs: {tabval/10} 📈'
-        await send_notification(api_id, api_hash, number, message)
-
 async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
+    
     global stop_flag
     api_id = '25126202'
     api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    
+    sideval_low_notified = False
+    sideval_high_notified = False
+    tabval_low_notified = False
+    tabval_high_notified = False
 
     while not stop_flag:
         sideval, tabval = await checking(url)
-        await check_conditions(sideval, tabval, sidel, sideh, tabl, tabh, number, api_id, api_hash)
+        
 
-        await asyncio.sleep(1)
+        if not sideval_low_notified and sidel is not None and math.trunc(sideval) <= sidel:
+            message = f'Gold Spot  $ : {sideval} 📉.'
+            await send_notification(api_id, api_hash, number, message)
+            sideval_low_notified = True
+
+        if not sideval_high_notified and sideh is not None and math.trunc(sideval) >= sideh:
+            message = f'Gold Spot  $ : {sideval} 📈 '
+            await send_notification(api_id, api_hash, number, message)
+            sideval_high_notified = True
+
+        if not tabval_low_notified and tabl is not None and math.trunc(tabval) <= tabl:
+            message = f'Gold (999) Rs: {tabval/10} 📉 '
+            await send_notification(api_id, api_hash, number, message)
+            tabval_low_notified = True
+
+        if not tabval_high_notified and tabh is not None and math.trunc(tabval) >= tabh:
+            message = f'Gold (999) Rs: {tabval/10} 📈 '
+            await send_notification(api_id, api_hash, number, message)
+            tabval_high_notified = True
+
+        # Stop the loop only if all conditions for notifications have been met
+        if (sidel is None or sideval_low_notified) and \
+           (sideh is None or sideval_high_notified) and \
+           (tabl is None or tabval_low_notified) and \
+           (tabh is None or tabval_high_notified):
+            stop_flag = True  # Stop the loop when all relevant notifications have been sent
+            break
+
+        await asyncio.sleep(1)  # Wait before checking again to prevent spamming
 
     message = "Scraping stopped. All conditions have been met."
     await send_notification(api_id, api_hash, number, message)
 
 def start_scraping(side_low, side_high, table_low, table_high, phone_number):
+    api_id = '25126202'
+    api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    base_message=f'Given values are :\n Gold Spot  $  low: {side_low} \nGold Spot  $ high: {side_high}\nGold (999) low Rs: {table_low} \nGold (999) high Rs: {table_high}'
+    asyncio.run(send_notification(api_id, api_hash, phone_number , base_message))
     global stop_flag
     stop_flag = False
     url = "http://www.ambicaaspot.com/liverate.html"
     
+    # Multiply table low and high by 10 inside the function
     table_low = table_low * 10 if table_low else None
     table_high = table_high * 10 if table_high else None
 
@@ -127,7 +132,7 @@ def stop_scraping():
 with gr.Blocks() as interface:
     with gr.Row():
         gr.Markdown("# GOLD WATCH")
-        gr.Markdown("Kindly enter your required target values and phone number(for notification) and leave the blocks blank if not required: ")
+        description="Kindly enter your required target values and phone number(for notification) and leave the blocks blank if not required: "
     
     with gr.Row():
         with gr.Column():
