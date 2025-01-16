@@ -61,8 +61,18 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
     sideval_high_notified = False
     tabval_low_notified = False
     tabval_high_notified = False
+    
+    if (sidel is None ) and \
+        (sideh is None ) and \
+        (tabl is None ) and \
+        (tabh is None ):
+        stop_flag = True
+        sideval, tabval = await checking(url)
+        message = f"The current Gold Spot  value is $ {sideval} and Gold (999) value is Rs: {tabval/10}"
+        await send_notification(api_id, api_hash, number, message)
+        return
 
-    while not stop_flag:
+    while stop_flag== False:
         sideval, tabval = await checking(url)
         
 
@@ -86,7 +96,7 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
             await send_notification(api_id, api_hash, number, message)
             tabval_high_notified = True
 
-       
+        
         if (sidel is None or sideval_low_notified) and \
            (sideh is None or sideval_high_notified) and \
            (tabl is None or tabval_low_notified) and \
@@ -94,12 +104,13 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
             stop_flag = True  
             break
 
-        await asyncio.sleep(1)  
+        await asyncio.sleep(1) 
 
     message = "Scraping stopped. All conditions have been met."
     await send_notification(api_id, api_hash, number, message)
 
 def start_scraping(side_low, side_high, table_low, table_high, phone_number):
+    
     api_id = 'use ur api id from telegram org apps'
     api_hash = 'use ur api hash from telegram org apps'
     base_message=f'Given values are :\n Gold Spot  $  low: {side_low} \nGold Spot  $ high: {side_high}\nGold (999) low Rs: {table_low} \nGold (999) high Rs: {table_high}'
@@ -108,6 +119,7 @@ def start_scraping(side_low, side_high, table_low, table_high, phone_number):
     stop_flag = False
     url = "http://www.ambicaaspot.com/liverate.html"
     
+    
     table_low = table_low * 10 if table_low else None
     table_high = table_high * 10 if table_high else None
 
@@ -115,36 +127,44 @@ def start_scraping(side_low, side_high, table_low, table_high, phone_number):
         url, 
         float(side_low) if side_low else None, 
         float(side_high) if side_high else None, 
-        table_low, 
-        table_high, 
+        table_low if table_low else None, 
+        table_high if table_high else None, 
         phone_number
     )))
     thread.start()
+    if phone_number=="":
+        stop_flag = True
+        return "Kindly enter your Phone number"
+
     return "Scraping started. You'll be notified when conditions are met."
 
-def stop_scraping():
+def stop_scraping(phone_number):
     global stop_flag
     stop_flag = True
+    api_id = 'use ur api id from telegram org apps'
+    api_hash = 'use ur api hash from telegram org apps'
+    stop_message = "You have manually stopped scraping"
+    asyncio.run(send_notification(api_id, api_hash, phone_number , stop_message))
     return "Scraping stopped."
 
 with gr.Blocks() as interface:
     with gr.Row():
         gr.Markdown("# GOLD WATCH")
-        description="Kindly enter your required target values and phone number(for notification) and leave the blocks blank if not required: "
+        gr.Markdown("Kindly enter your required target values and phone number(for notification) and leave the blocks blank if not required ")
     
     with gr.Row():
         with gr.Column():
-            side_low = gr.Number(label="Gold Spot  $ Low")
-            side_high = gr.Number(label="Gold Spot  $ High")
-            table_low = gr.Number(label="Gold (999) Rs Low")
-            table_high = gr.Number(label="Gold (999) Rs High")
-            phone_number = gr.Textbox(label="Phone Number (with '+')")
+            side_low = gr.Number(label="Gold Spot  $ Low", value=None)
+            side_high = gr.Number(label="Gold Spot  $ High",value=None)
+            table_low = gr.Number(label="Gold (999) Rs Low",value=None)
+            table_high = gr.Number(label="Gold (999) Rs High",value=None)
+            phone_number = gr.Textbox(label="Phone Number (with '+')",value=None)
             start_button = gr.Button("Start Scraping")
             stop_button = gr.Button("Stop Scraping")
         
     output = gr.Textbox(label="Status", lines=4)
 
     start_button.click(start_scraping, inputs=[side_low, side_high, table_low, table_high, phone_number], outputs=output)
-    stop_button.click(stop_scraping, inputs=[], outputs=output)
+    stop_button.click(stop_scraping, inputs=[phone_number], outputs=output)
 
 interface.launch(server_name="0.0.0.0", server_port=7860)
