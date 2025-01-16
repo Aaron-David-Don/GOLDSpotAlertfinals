@@ -6,7 +6,6 @@ from telethon.tl.types import InputPeerUser
 import threading
 import math
 
-# Global variable to control stopping
 stop_flag = False
 
 async def checking(url):
@@ -55,8 +54,8 @@ async def send_notification(api_id, api_hash, number, message):
 async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
     
     global stop_flag
-    api_id = '25126202'
-    api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    api_id = 'use ur api id from telegram org apps'
+    api_hash = 'use ur api hash from telegram org apps'
     
     sideval_low_notified = False
     sideval_high_notified = False
@@ -97,30 +96,30 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
             await send_notification(api_id, api_hash, number, message)
             tabval_high_notified = True
 
-        # Stop the loop only if all conditions for notifications have been met
+        
         if (sidel is None or sideval_low_notified) and \
            (sideh is None or sideval_high_notified) and \
            (tabl is None or tabval_low_notified) and \
            (tabh is None or tabval_high_notified):
-            stop_flag = True  # Stop the loop when all relevant notifications have been sent
+            stop_flag = True  
             break
 
-        await asyncio.sleep(1)  # Wait before checking again to prevent spamming
+        await asyncio.sleep(1) 
 
     message = "Scraping stopped. All conditions have been met."
     await send_notification(api_id, api_hash, number, message)
 
 def start_scraping(side_low, side_high, table_low, table_high, phone_number):
     
-    api_id = '25126202'
-    api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    api_id = 'use ur api id from telegram org apps'
+    api_hash = 'use ur api hash from telegram org apps'
     base_message=f'Given values are :\n Gold Spot  $  low: {side_low} \nGold Spot  $ high: {side_high}\nGold (999) low Rs: {table_low} \nGold (999) high Rs: {table_high}'
     asyncio.run(send_notification(api_id, api_hash, phone_number , base_message))
     global stop_flag
     stop_flag = False
     url = "http://www.ambicaaspot.com/liverate.html"
     
-    # Multiply table low and high by 10 inside the function
+    
     table_low = table_low * 10 if table_low else None
     table_high = table_high * 10 if table_high else None
 
@@ -142,8 +141,8 @@ def start_scraping(side_low, side_high, table_low, table_high, phone_number):
 def stop_scraping(phone_number):
     global stop_flag
     stop_flag = True
-    api_id = '25126202'
-    api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    api_id = 'use ur api id from telegram org apps'
+    api_hash = 'use ur api hash from telegram org apps'
     stop_message = "You have manually stopped scraping"
     asyncio.run(send_notification(api_id, api_hash, phone_number , stop_message))
     return "Scraping stopped."
