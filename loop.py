@@ -186,4 +186,4 @@ with gr.Blocks() as interface:
     start_button.click(start_scraping, inputs=[side_low, side_high, table_low, table_high, phone_number], outputs=output)
     stop_button.click(stop_scraping, inputs=[phone_number], outputs=output)
 
-interface.launch()
+interface.launch(server_name="0.0.0.0", server_port=7860)
