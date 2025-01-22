@@ -117,11 +117,8 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
             await send_notification(api_id, api_hash, number, message)
             tabval_high_notified = True
 
-        if (sidel is None or sideval_low_notified) and \
-           (sideh is None or sideval_high_notified) and \
-           (tabl is None or tabval_low_notified) and \
-           (tabh is None or tabval_high_notified):
-            stop_flag = True  
+        if all([sidel is None or sideval_low_notified,sideh is None or sideval_high_notified,tabl is None or tabval_low_notified,tabh is None or tabval_high_notified]):
+            stop_flag = True
             break
 
         await asyncio.sleep(60) 
