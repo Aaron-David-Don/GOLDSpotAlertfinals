@@ -55,8 +55,8 @@ async def send_notification(api_id, api_hash, number, message):
 async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
     
     global stop_flag
-    api_id = '25126202'
-    api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    api_id = 'enter ur api id'
+    api_hash = 'enter ur api hash'
     
     sideval_low_notified = False
     sideval_high_notified = False
@@ -112,8 +112,8 @@ async def scrape_amazon(url, sidel, sideh, tabl, tabh, number):
 
 def start_scraping(side_low, side_high, table_low, table_high, phone_number):
     
-    api_id = '25126202'
-    api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    api_id = 'enter ur api id'
+    api_hash = 'enter ur api hash'
     base_message=f'Given values are :\n Gold Spot  $  low: {side_low} \nGold Spot  $ high: {side_high}\nGold (999) low Rs: {table_low} \nGold (999) high Rs: {table_high}'
     asyncio.run(send_notification(api_id, api_hash, phone_number , base_message))
     global stop_flag
@@ -142,8 +142,8 @@ def start_scraping(side_low, side_high, table_low, table_high, phone_number):
 def stop_scraping(phone_number):
     global stop_flag
     stop_flag = True
-    api_id = '25126202'
-    api_hash = '51bb6b6de4f0faec05fba079ee976bba'
+    api_id = 'enter ur api id'
+    api_hash = 'enter ur api hash'
     stop_message = "You have manually stopped scraping"
     asyncio.run(send_notification(api_id, api_hash, phone_number , stop_message))
     return "Scraping stopped."
